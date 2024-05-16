@@ -21,14 +21,14 @@ function load_data(file_path::String)
     for line in eachline(file)
         match = Base.match(regex, line)
         if match !== nothing
-            push!(data, (parse(Int, match[1]), parse(Float64, match[2]), parse(Float64, match[3]), parse(Int, match[4]), parse(Int, match[5]), parse(Int, match[6]), match[7]))
+            push!(data, (parse(Int, match[1]), parse(Float64, match[2]), parse(Float64, match[3]), parse(Int, match[4]), parse(Int, match[5]) / 10, parse(Int, match[6]), match[7]))
         end
     end
 
     close(file)
 
     # 데이터프레임으로 변환
-    df = DataFrame(data, [:index, :longitude, :latitude, :demand, :fixed_cost, :capacity, :location])
+    df = DataFrame(data, [:index, :longitude, :latitude, :capacity, :fixed_cost, :demand, :location])
 
     # c_ij 값을 계산
     c_ij = [haversine(df.latitude[i], df.longitude[i], df.latitude[j], df.longitude[j]) for i in 1:nrow(df), j in 1:nrow(df)]

@@ -41,5 +41,8 @@ function compute_Z_l(df::DataFrame, λ::Vector{Float64}, c_ij::Matrix{Float64})
         feasible_for_1 = false
     end
     # @show f_inf_index
-    return objective_value(model), feasible_for_1, f_inf_index
+    return objective_value(model), feasible_for_1, f_inf_index, value.(x)
 end
+
+# df, c_ij = load_data("usa.txt")
+# Z_l, is_feasible, f_inf_index, x_values = compute_Z_l(df, zeros(nrow(df)), c_ij)

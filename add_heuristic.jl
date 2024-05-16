@@ -20,6 +20,7 @@ end
 function add_heuristic(df::DataFrame, c_ij::Matrix{Float64})
     K = Set{Int}()
     Z_u = Inf  # 최적 비용을 무한대로 초기화
+    TC = 0
 
     while true
         R = Dict{Int, Float64}()
@@ -44,48 +45,39 @@ function add_heuristic(df::DataFrame, c_ij::Matrix{Float64})
 
         push!(K, best_facility)
         current_cost = sum(df.fixed_cost[f] for f in K)
+        TC = current_cost
         Z_u = min(Z_u, current_cost)
 
-        if sum(df.capacity[f] for f in K) >= sum(df.demand)
-            println("수요를 충족하는데 필요한 용량이 확보되었습니다.")
+        # Step 3: 수요 조건 확인
+        if sum(df.capacity[f] for f in K) < sum(df.demand)
+            println("현재 선택된 시설의 용량이 충분하지 않습니다. 다시 Step 1로 돌아갑니다.")
+            continue
+        else
             break
         end
     end
 
-    # Step 4: 각 고객 j에 대해, K 내에서 최상의 할당과 두 번째 할당 간의 비용 차이를 계산
-    cost_differential = Dict{Int, Float64}()
-    for j in 1:size(df, 1)
-        best_cost = Inf
-        second_best_cost = Inf
-        for i in K
-            if c_ij[i, j] < best_cost
-                second_best_cost = best_cost
-                best_cost = c_ij[i, j]
-            elseif c_ij[i, j] < second_best_cost
-                second_best_cost = c_ij[i, j]
-            end
-        end
-        cost_differential[j] = second_best_cost - best_cost
-    end
-
-    # Step 5: 각 고객을 비용 차이가 가장 큰 순서대로 정렬하고, 최소 비용 할당을 가진 열린 시설에 할당
-    sorted_customers = sort(collect(keys(cost_differential)), by=x->cost_differential[x], rev=true)
-    for j in sorted_customers
-        for i in K
-            if df.capacity[i] >= df.demand[j]
-                df.capacity[i] -= df.demand[j]
-                break
-            end
-        end
-    end
-
-    # Step 6: 고객이 할당되지 않은 시설을 제거
-    assigned_facilities = Set{Int}()
+    # 고객 할당 및 비용 계산 (Step 4 - Step 5)
+    assignments = Dict{Int, Int}()
     for j in 1:size(df, 1)
         best_i = argmin([c_ij[i, j] for i in K])
-        push!(assigned_facilities, best_i)
+        assignments[j] = best_i
+        df.capacity[best_i] -= df.demand[j]
     end
-    K = intersect(K, assigned_facilities)
+
+    # 할당되지 않은 시설 제거 (Step 6)
+    for i in K
+        if !any(assignments[j] == i for j in keys(assignments))
+            delete!(K, i)
+        end
+    end
+
+    if TC < Z_u
+        Z_u = TC
+    else
+        # 마지막으로 가능한 최적 비용 계산
+        TC = Z_u
+    end
 
     return K, Z_u
 end
