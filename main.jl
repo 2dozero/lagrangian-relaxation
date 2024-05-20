@@ -31,7 +31,7 @@ function lagrangian_relaxation_heuristic(file_path::String)
     # @show typeof(inf_indicies)
     # @show UB, LB
     if !is_feasible
-        lambda = update_lambda(inf_indicies, lambda, x_values, df, 0.000000025, UB, LB, U)
+        lambda = update_lambda(inf_indicies, lambda, x_values, df, 0.0000000025, UB, LB, U)
         push!(lambda_list, sum(lambda))
     end
     # @show lambda
@@ -42,11 +42,24 @@ function lagrangian_relaxation_heuristic(file_path::String)
     i = 1
     max_iteration = 200
 
+    # while true
+    #     new_Z_l, is_feasible, f_inf_index, x_values, y_values = compute_Z_l(df, lambda, c_ij)
+    #     inf_indicies = findall(x -> x == 0, f_inf_index)
+    #     if Z_l < new_Z_l
+    #         LB = new_Z_l
+    #     end
+    #     push!(LB_list, LB)
+    old_LB = LB
     while true
         new_Z_l, is_feasible, f_inf_index, x_values, y_values = compute_Z_l(df, lambda, c_ij)
         inf_indicies = findall(x -> x == 0, f_inf_index)
         if Z_l < new_Z_l
             LB = new_Z_l
+        end
+        if LB < old_LB
+            LB = old_LB
+        else
+            old_LB = LB
         end
         push!(LB_list, LB)
 
@@ -64,11 +77,9 @@ function lagrangian_relaxation_heuristic(file_path::String)
             goto_step_2 = true
         end
 
-
         if goto_step_2
             i += 1
-
-            lambda = update_lambda(inf_indicies, lambda, x_values, df, 0.000000025, UB, LB, U)
+            lambda = update_lambda(inf_indicies, lambda, x_values, df, 0.0000000025, UB, LB, U)
             push!(lambda_list, sum(lambda))
             new_Z_l, is_feasible, f_inf_index, x_values, y_values = compute_Z_l(df, lambda, c_ij)
             
@@ -87,9 +98,9 @@ function lagrangian_relaxation_heuristic(file_path::String)
 
     # Step 5
     if !is_feasible
-        return "Stop"
+        return "Stop (no feasible solution found)"
     else
-        return "Find"
+        return "Find feasible solution"
     end
 
 end
