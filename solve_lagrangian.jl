@@ -34,14 +34,14 @@ function compute_Z_l(df::DataFrame, λ::Vector{Float64}, c_ij::Matrix{Float64})
     # @show f_inf_index
     for i in 1:N
         if sum(df.demand[j] * value(x[i, j]) for j in 1:M) > df.capacity[i] * value(y[i])
-            f_inf_index[i] = 0
+            f_inf_index[i] = 0 # infeasible
         end
     end
     if sum(f_inf_index) != N
         feasible_for_1 = false
     end
     # @show f_inf_index
-    return objective_value(model), feasible_for_1, f_inf_index, value.(x)
+    return objective_value(model), feasible_for_1, f_inf_index, value.(x), value.(y)
 end
 
 # df, c_ij = load_data("usa.txt")

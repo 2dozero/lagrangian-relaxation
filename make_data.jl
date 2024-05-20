@@ -21,7 +21,7 @@ function load_data(file_path::String)
     for line in eachline(file)
         match = Base.match(regex, line)
         if match !== nothing
-            push!(data, (parse(Int, match[1]), parse(Float64, match[2]), parse(Float64, match[3]), parse(Int, match[4]), parse(Int, match[5]) / 10, parse(Int, match[6]), match[7]))
+            push!(data, (parse(Int, match[1]), parse(Float64, match[2]), parse(Float64, match[3]), parse(Int, match[4]) / 10, parse(Int, match[5]) / 10, parse(Int, match[6]), match[7]))
         end
     end
 
